@@ -34,7 +34,7 @@ func Register (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, status, err := bd.InsertUser(t)
+	userId, status, err := bd.InsertUser(t)
 	if err != nil {
 		http.Error(w, "Ocurrio un error al registrar el usuario " + err.Error(), 400)
 		return 
@@ -46,6 +46,12 @@ func Register (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := make(map[string]string)
+	resp["message"] = "El usuario se ha registrado correctamente"
+	resp["id"] = userId
+
 	// esto es como devolver un 200
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
 }

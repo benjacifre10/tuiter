@@ -19,7 +19,9 @@ func HandlersRoutes() {
 	// creo el router a partir de mux
 	router := mux.NewRouter()
 
-	router.HandleFunc("/register", middlewares.DbCheck(routers.Register)).Methods("POST")
+	router.HandleFunc("/user-register", middlewares.DbCheck(routers.Register)).Methods("POST")
+	router.HandleFunc("/login", middlewares.DbCheck(routers.Login)).Methods("POST")
+	router.HandleFunc("/perfil", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetPerfil))).Methods("GET")
 
 	// traigo el puerto del env, pero si no existe le meto de pecho 8080
 	PORT := os.Getenv("PORT")
@@ -27,6 +29,7 @@ func HandlersRoutes() {
 		PORT = "8081"
 	}
 
+	log.Println("Listening port: " + PORT)
 	// creo un handler para que mi api sea accesible desde cualquier lugar
 	// con esto tengo los permisos remotos para acceder a esta api, por ejemplo cuando este en heroku
 	// le doy permiso a todo el mundo para manejar las rutas que le paso por parametro

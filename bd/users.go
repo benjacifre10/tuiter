@@ -26,7 +26,7 @@ func InsertUser(u models.User) (string, bool, error) {
 	}
 
 	ObjID, _ := result.InsertedID.(primitive.ObjectID)
-	return ObjID.String(), true, nil
+	return ObjID.Hex(), true, nil
 }
 
 /* Check if an user already existing in db */
@@ -49,4 +49,18 @@ func CheckExistingUser(email string) (models.User, bool, string) {
 	}
 
 	return result, true, ID
+}
+
+/* Login the user to the app */
+func Login(email string, password string) (models.User, bool) {
+	user, find, _ := CheckExistingUser(email)
+	if find == false {
+		return user, false
+	}
+
+	err := utils.DecryptPassword(user.Password, password)
+	if err != nil {
+		return user, false
+	}
+	return user, true
 }
