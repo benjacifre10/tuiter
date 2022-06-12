@@ -55,3 +55,48 @@ func Register (w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(resp)
 }
+
+/* GetUser get the user info */
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	ID := r.URL.Query().Get("id")
+	if len(ID) < 1 {
+		http.Error(w, "Debe enviar el parametro ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := bd.FindUser(ID)
+	if err != nil {
+		http.Error(w, "Ocurrio un error al intentar buscar los datos del usuario " + err.Error(), 400)
+		return
+	}
+
+	w.Header().Set("context-type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
+}
+
+/* UpdateUser update the user info */
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	var t models.User
+
+	err := json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		http.Error(w, "Datos incorrectos " + err.Error(), 400)
+		return
+	}
+
+	var status bool
+
+	status, err = bd.UpdateUser(t, IDUser)
+	if err != nil {
+		http.Error(w, "Ocurrio un error al intentar modificar el usuario. Reintente nuevamente " + err.Error(), 400)
+		return
+	}
+
+	if status == false {
+		http.Error(w, "No se ha logrado modificar el usuario", 400)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}

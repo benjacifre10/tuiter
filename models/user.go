@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-/* @def User model for the mongo DB */
+/* User model for the mongo DB */
 type User struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name string `bson:"name" json:"name,omitempty"`

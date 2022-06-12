@@ -19,9 +19,12 @@ func HandlersRoutes() {
 	// creo el router a partir de mux
 	router := mux.NewRouter()
 
-	router.HandleFunc("/user-register", middlewares.DbCheck(routers.Register)).Methods("POST")
 	router.HandleFunc("/login", middlewares.DbCheck(routers.Login)).Methods("POST")
-	router.HandleFunc("/perfil", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetPerfil))).Methods("GET")
+	router.HandleFunc("/user", middlewares.DbCheck(routers.Register)).Methods("POST")
+	router.HandleFunc("/user", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetUser))).Methods("GET")
+	router.HandleFunc("/user", middlewares.DbCheck(middlewares.ValidatedJWT(routers.UpdateUser))).Methods("PUT")
+	router.HandleFunc("/tweet", middlewares.DbCheck(middlewares.ValidatedJWT(routers.InsertTweet))).Methods("POST")
+	router.HandleFunc("/tweet", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetTweets))).Methods("GET")
 
 	// traigo el puerto del env, pero si no existe le meto de pecho 8080
 	PORT := os.Getenv("PORT")
