@@ -43,7 +43,7 @@ func GetTweets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(r.URL.Query.Get("page")) < 1 {
+	if len(r.URL.Query().Get("page")) < 1 {
 		http.Error(w, "Debe enviar el parametro de pagina", http.StatusBadRequest)
 		return
 	}
