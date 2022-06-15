@@ -77,13 +77,12 @@ func GetTweetsFollowers(ID string, page int) ([]models.TweetsFollowers, bool) {
 	condition := make([]bson.M, 0)
 	condition = append(condition, bson.M { "$match": bson.M { "userid": ID } })
 	condition = append(condition, bson.M {
-		"$lookup": bson.M {
+		"$lookup": bson.M{
 			"from": "tweets",
 			"localField": "userfollowerid",
 			"foreignField": "userid",
 			"as": "tweets",
-		},
-	})
+	}})
 	condition = append(condition, bson.M { "$unwind": "$tweets" })
 	condition = append(condition, bson.M { "$sort": bson.M { "tweets.date": -1 }}) // para ordenar va con 1 o -1(asc y desc)
 	condition = append(condition, bson.M { "$skip": skip })
