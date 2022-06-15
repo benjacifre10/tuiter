@@ -9,6 +9,7 @@ import (
 	"github.com/benjacifre10/tuiter/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 /* Register user in bd */
@@ -107,7 +108,9 @@ func UpdateUser(u models.User, ID string) (bool, error) {
 	if len(u.Surname) > 0 {
 		row["surname"] = u.Surname
 	}
-	row["birthday"] = u.Birthday
+	if !u.Birthday.IsZero() {
+    row["birthday"] = u.Birthday
+  }
 	if len(u.Banner) > 0 {
 		row["banner"] = u.Banner
 	}
@@ -138,4 +141,79 @@ func UpdateUser(u models.User, ID string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+/* GetAllUsers get a list of users */
+func GetAllUsers(ID string, page int64, search string, typeUser string) ([]*models.User, bool) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
+	defer cancel()
+
+	db := MongoConnection.Database("tuitor")
+	collection := db.Collection("users")
+
+	var result []*models.User
+
+	findOptions := options.Find()
+	findOptions.SetSkip((page - 1) * 20)
+	findOptions.SetLimit(20)
+
+	query := bson.M {
+		"name": bson.M { "$regex": `(?i)` + search },
+	}
+
+	cur, err := collection.Find(ctx, query, findOptions)
+	if err != nil {
+		log.Println(err.Error())
+		return result, false
+	}
+
+	var findUser, include bool
+
+	for cur.Next(ctx) {
+		var s models.User
+		err := cur.Decode(&s)
+		if err != nil {
+			log.Println(err.Error())
+			return result, false
+		}
+
+		var r models.Follower
+		r.UserId = ID
+		r.UserFollowerId = s.ID.Hex()
+
+		include = false
+
+		findUser, err = GetFollowers(r) 
+		if typeUser == "new" && findUser == false {
+			include = true
+		}
+		if typeUser == "follow" && findUser == true {
+			include = true
+		}
+
+		if r.UserFollowerId == ID {
+			include = false
+		}
+
+		if include == true {
+			s.Password = ""
+			s.Biography = ""
+			s.Website = ""
+			s.Ubication = ""
+			s.Banner = ""
+			s.Email = ""
+
+			result = append(result, &s)
+		}
+	}
+
+	err = cur.Err()
+	if err != nil {
+		log.Println(err.Error())
+		return result, false
+	}
+
+	cur.Close(ctx)
+	return result, true
+
 }

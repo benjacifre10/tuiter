@@ -2,7 +2,11 @@ package routers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/benjacifre10/tuiter/bd"
 	"github.com/benjacifre10/tuiter/models"
@@ -100,3 +104,107 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+/* UploadAvatar upload a image from a avatar in the bd */
+func UploadAvatarBanner(w http.ResponseWriter, r *http.Request) {
+	ID := r.URL.Query().Get("id")
+	fileType := r.URL.Query().Get("type")
+	file, handler, err := r.FormFile(fileType)
+	var extension = filepath.Ext(handler.Filename)
+	var filePath string = "uploads/" + fileType + "/" + ID + extension
+
+	f, err := os.OpenFile(filePath, os.O_WRONLY | os.O_CREATE, 0666)
+	if err != nil {
+		http.Error(w, "Error al subir la imagen ! " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_, err = io.Copy(f, file)
+	if err != nil {
+		http.Error(w, "Error al copiar la imagen ! " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var user models.User
+	var status bool
+
+	if fileType == "avatar" {
+		user.Avatar = ID + extension
+	} else {
+		user.Banner = ID + extension
+	}
+	status, err = bd.UpdateUser(user, ID)
+	if err != nil || status == false {
+		http.Error(w, "Error al grabar el " + fileType + " en la BD ! " + err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+}
+
+/* GetAvatar get the avatar from db and from the directory */
+func GetAvatarBanner(w http.ResponseWriter, r *http.Request) {
+	ID := r.URL.Query().Get("id")
+	fileType := r.URL.Query().Get("type")
+	if len(ID) < 1 {
+		http.Error(w, "Debe enviar el parametro ID", http.StatusBadRequest)
+		return
+	}
+
+	if len(fileType) < 1 {
+		http.Error(w, "Debe enviar el parametro type", http.StatusBadRequest)
+		return
+	}
+
+	user, err := bd.FindUser(ID)
+	if err != nil {
+		http.Error(w, "Usuario no encontrado", http.StatusBadRequest)
+		return
+	}
+
+	var avatarOrBanner string
+	if fileType == "avatar" {
+		avatarOrBanner = user.Avatar
+	} else {
+		avatarOrBanner = user.Banner
+	}
+
+	OpenFile, err := os.Open("uploads/" + fileType + "/" + avatarOrBanner)
+
+	if err != nil {
+		http.Error(w, "Imagen no encontrada", http.StatusBadRequest)
+		return
+	}
+
+	_, err = io.Copy(w, OpenFile)
+	if err != nil {
+		http.Error(w, "Error al copiar la imagen", http.StatusBadRequest)
+	}
+}
+
+/* GetAllUsers give us the list of users */
+func GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	typeUser := r.URL.Query().Get("type")
+	page := r.URL.Query().Get("page")
+	search := r.URL.Query().Get("search")
+
+	pagTemp, err := strconv.Atoi(page)
+	if err != nil {
+		http.Error(w, "Debe enviar el parametro pagina con un valor mayor a 0", http.StatusBadRequest)
+		return
+	}
+
+	pag := int64(pagTemp)
+
+	result, status := bd.GetAllUsers(IDUser, pag, search, typeUser)
+	if status == false {
+		http.Error(w, "Error al leer los usuarios", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
+}
+

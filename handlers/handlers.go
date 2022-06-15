@@ -22,9 +22,17 @@ func HandlersRoutes() {
 	router.HandleFunc("/login", middlewares.DbCheck(routers.Login)).Methods("POST")
 	router.HandleFunc("/user", middlewares.DbCheck(routers.Register)).Methods("POST")
 	router.HandleFunc("/user", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetUser))).Methods("GET")
+	router.HandleFunc("/user/all", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetAllUsers))).Methods("GET")
 	router.HandleFunc("/user", middlewares.DbCheck(middlewares.ValidatedJWT(routers.UpdateUser))).Methods("PUT")
 	router.HandleFunc("/tweet", middlewares.DbCheck(middlewares.ValidatedJWT(routers.InsertTweet))).Methods("POST")
 	router.HandleFunc("/tweet", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetTweets))).Methods("GET")
+	router.HandleFunc("/tweet", middlewares.DbCheck(middlewares.ValidatedJWT(routers.DeleteTweet))).Methods("DELETE")
+	router.HandleFunc("/avatar_banner", middlewares.DbCheck(middlewares.ValidatedJWT(routers.UploadAvatarBanner))).Methods("POST")
+	router.HandleFunc("/avatar_banner", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetAvatarBanner))).Methods("GET")
+	router.HandleFunc("/follower", middlewares.DbCheck(middlewares.ValidatedJWT(routers.InsertFollower))).Methods("POST")
+	router.HandleFunc("/follower", middlewares.DbCheck(middlewares.ValidatedJWT(routers.DeleteFollower))).Methods("DELETE")
+	router.HandleFunc("/follower", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetFollower))).Methods("GET")
+	router.HandleFunc("/follower/tweets", middlewares.DbCheck(middlewares.ValidatedJWT(routers.GetTweetsFollowers))).Methods("GET")
 
 	// traigo el puerto del env, pero si no existe le meto de pecho 8080
 	PORT := os.Getenv("PORT")

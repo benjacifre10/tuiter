@@ -70,3 +70,22 @@ func GetTweets(ID string, page int64) ([]*models.Tweet, bool) {
 
 	return results, true
 }
+
+/* DeleteTweet delete the tweet from the db */
+func DeleteTweet(ID string, UserID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
+	defer cancel()
+
+	db := MongoConnection.Database("tuitor")
+	collection := db.Collection("tweets")
+
+	objID, _ := primitive.ObjectIDFromHex(ID)
+
+	condition := bson.M {
+		"_id": objID,
+		"userid": UserID,
+	}
+
+	_, err := collection.DeleteOne(ctx, condition)
+	return err
+}

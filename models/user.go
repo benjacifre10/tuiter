@@ -20,3 +20,8 @@ type User struct {
 	Ubication string `bson:"ubication" json:"ubication,omitempty"`
 	Website string `bson:"website" json:"website,omitempty"`
 }
+
+/* LoginResponse have the token which return in the login */
+type LoginResponse struct {
+	Token string `json:"token,omitempty"`
+}
